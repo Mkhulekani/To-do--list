@@ -55,6 +55,9 @@
         newLi.appendChild(checkBtn);
         newLi.appendChild(delBtn);
         newLi.appendChild(editBtn);
+
+        // Save the task to localStorage as 'notCompleted'
+        saveTaskToLocalStorage(input.value, dateInput.value, 'notCompleted');
       }
 
       checkBtn.addEventListener('click', function () {
@@ -62,17 +65,18 @@
         parent.remove();
         Completed.appendChild(parent);
         checkBtn.style.display = 'none';
+        updateLocalStorage();
       });
 
       delBtn.addEventListener('click', function () {
         const parent = this.parentNode;
         parent.remove();
+        updateLocalStorage();
       });
 
       editBtn.addEventListener('click', function () {
         const parent = this.parentNode;
 
-        // Make the task editable
         const taskText = parent.firstChild.textContent.replace(/ \(Due: .*\)$/, '').trim();
         const taskDate = parent.firstChild.textContent.match(/Due: (.*)$/) ? parent.firstChild.textContent.match(/Due: (.*)$/)[1] : '';
 
@@ -84,7 +88,6 @@
         editDateInput.type = 'date';
         editDateInput.value = taskDate;
 
-        // Replace text with input fields
         parent.innerHTML = '';
         parent.appendChild(editTextInput);
         parent.appendChild(editDateInput);
@@ -92,18 +95,145 @@
         parent.appendChild(delBtn);
         parent.appendChild(editBtn);
 
-        // When the user clicks "Update", update the task text and date
         editTextInput.addEventListener('blur', function () {
           if (editTextInput.value !== '' && editDateInput.value !== '') {
             parent.innerHTML = `${editTextInput.value} (Due: ${editDateInput.value})`;
             parent.appendChild(checkBtn);
             parent.appendChild(delBtn);
             parent.appendChild(editBtn);
+
+            // Update localStorage
+            updateLocalStorage();
           }
         });
       });
     }
-    
+
+    function saveTaskToLocalStorage(taskText, taskDate, status) {
+      let tasks = JSON.parse(localStorage.getItem(status)) || [];
+      tasks.push({ text: taskText, date: taskDate });
+      localStorage.setItem(status, JSON.stringify(tasks));
+    }
+
+    function updateLocalStorage() {
+      const notCompleted = document.querySelector('.notCompleted').children;
+      const Completed = document.querySelector('.Completed').children;
+
+      let notCompletedTasks = [];
+      let completedTasks = [];
+
+      for (let task of notCompleted) {
+        const taskText = task.textContent.replace(/ \(Due: .*\)$/, '').trim();
+        const taskDate = task.textContent.match(/Due: (.*)$/) ? task.textContent.match(/Due: (.*)$/)[1] : '';
+        notCompletedTasks.push({ text: taskText, date: taskDate });
+      }
+
+      for (let task of Completed) {
+        const taskText = task.textContent.replace(/ \(Due: .*\)$/, '').trim();
+        const taskDate = task.textContent.match(/Due: (.*)$/) ? task.textContent.match(/Due: (.*)$/)[1] : '';
+        completedTasks.push({ text: taskText, date: taskDate });
+      }
+
+      localStorage.setItem('notCompleted', JSON.stringify(notCompletedTasks));
+      localStorage.setItem('Completed', JSON.stringify(completedTasks));
+    }
+
+    function loadTasksFromLocalStorage() {
+      const notCompletedTasks = JSON.parse(localStorage.getItem('notCompleted')) || [];
+      const completedTasks = JSON.parse(localStorage.getItem('Completed')) || [];
+
+      const notCompleted = document.querySelector('.notCompleted');
+      const Completed = document.querySelector('.Completed');
+
+      for (let task of notCompletedTasks) {
+        const newLi = document.createElement('li');
+        const checkBtn = document.createElement('button');
+        const delBtn = document.createElement('button');
+        const editBtn = document.createElement('button');
+
+        checkBtn.innerHTML = '<i class="fa fa-check"></i>';
+        delBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        editBtn.innerHTML = '<i class="fa fa-pencil"></i>';
+
+        newLi.textContent = `${task.text} (Due: ${task.date})`;
+        notCompleted.appendChild(newLi);
+        newLi.appendChild(checkBtn);
+        newLi.appendChild(delBtn);
+        newLi.appendChild(editBtn);
+
+        checkBtn.addEventListener('click', function () {
+          const parent = this.parentNode;
+          parent.remove();
+          Completed.appendChild(parent);
+          checkBtn.style.display = 'none';
+          updateLocalStorage();
+        });
+
+        delBtn.addEventListener('click', function () {
+          const parent = this.parentNode;
+          parent.remove();
+          updateLocalStorage();
+        });
+
+        editBtn.addEventListener('click', function () {
+          const parent = this.parentNode;
+
+          const taskText = parent.firstChild.textContent.replace(/ \(Due: .*\)$/, '').trim();
+          const taskDate = parent.firstChild.textContent.match(/Due: (.*)$/) ? parent.firstChild.textContent.match(/Due: (.*)$/)[1] : '';
+
+          const editTextInput = document.createElement('input');
+          editTextInput.type = 'text';
+          editTextInput.value = taskText;
+
+          const editDateInput = document.createElement('input');
+          editDateInput.type = 'date';
+          editDateInput.value = taskDate;
+
+          parent.innerHTML = '';
+          parent.appendChild(editTextInput);
+          parent.appendChild(editDateInput);
+          parent.appendChild(checkBtn);
+          parent.appendChild(delBtn);
+          parent.appendChild(editBtn);
+
+          editTextInput.addEventListener('blur', function () {
+            if (editTextInput.value !== '' && editDateInput.value !== '') {
+              parent.innerHTML = `${editTextInput.value} (Due: ${editDateInput.value})`;
+              parent.appendChild(checkBtn);
+              parent.appendChild(delBtn);
+              parent.appendChild(editBtn);
+              updateLocalStorage();
+            }
+          });
+        });
+      }
+
+      for (let task of completedTasks) {
+        const newLi = document.createElement('li');
+        const checkBtn = document.createElement('button');
+        const delBtn = document.createElement('button');
+        const editBtn = document.createElement('button');
+
+        checkBtn.innerHTML = '<i class="fa fa-check"></i>';
+        delBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        editBtn.innerHTML = '<i class="fa fa-pencil"></i>';
+
+        newLi.textContent = `${task.text} (Due: ${task.date})`;
+        Completed.appendChild(newLi);
+        newLi.appendChild(checkBtn);
+        newLi.appendChild(delBtn);
+        newLi.appendChild(editBtn);
+
+        checkBtn.style.display = 'none';
+        delBtn.addEventListener('click', function () {
+          const parent = this.parentNode;
+          parent.remove();
+          updateLocalStorage();
+        });
+      }
+    }
+
+    loadTasksFromLocalStorage();
   </script>
 </body>
 </html>
